@@ -15,6 +15,7 @@ public:
     virtual double extract_min() = 0;
     virtual const std::string get_name() = 0;
     virtual unsigned int size() = 0;
+    virtual EdgeExtractor* clone() = 0;
     virtual ~EdgeExtractor() {}
 };
 
@@ -28,15 +29,26 @@ public:
 
     HeapMin(const HeapMin& other) : min_priority_queue(other.min_priority_queue) {}
 
-    void insert_edge(double const & edge) override;
+    void insert_edge(double const &edge) override { min_priority_queue->push(edge); }
 
-    double extract_min() override;
+    double extract_min() override
+    {
+        double min_value = min_priority_queue->top();
+        min_priority_queue->pop();
+        return min_value;
+    }
 
-    const std::string get_name() override;
+    const std::string get_name() override { return "HeapMin"; }
 
-    unsigned int size() override;
+    unsigned int size() override { return min_priority_queue->size(); }
 
-    ~HeapMin();
+    HeapMin *clone() override
+    {
+        HeapMin *new_heap = new HeapMin(*this);
+        return new_heap;
+    }
+
+    ~HeapMin() { delete min_priority_queue; }
 };
 
 class ArraySort : public EdgeExtractor
@@ -50,15 +62,35 @@ public:
 
     ArraySort(ArraySort& other) : array(other.array), is_sorted(false) {}
 
-    void insert_edge(double const & edge) override;
+    void insert_edge(double const &edge) override
+    {
+        array->push_back(edge);
+        is_sorted = false;
+    }
 
-    double extract_min() override;
+    double extract_min() override
+    {
+        if (!is_sorted)
+        {
+            sort(array->begin(), array->end(), std::greater<double>()); // Sort the array in descending order
+            is_sorted = true;
+        }
+        double min_value = array->back();
+        array->pop_back();
+        return min_value;
+    }
 
-    const std::string get_name() override;
+    const std::string get_name() override { return "ArraySort"; }
 
-    unsigned int size() override;
+    unsigned int size() override { return array->size(); }
 
-    ~ArraySort();
+    ArraySort *clone() override
+    {
+        ArraySort *new_array = new ArraySort(*this);
+        return new_array;
+    }
+
+    ~ArraySort() { delete array; }
 };
 
 #endif

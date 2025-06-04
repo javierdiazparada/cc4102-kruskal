@@ -8,6 +8,8 @@
 #include <mutex>
 #include <format>
 #include <condition_variable>
+#include <iomanip>
+#include <type_traits>
 
 #include "include/utils.h"
 #include "include/edge_extractor.h"
@@ -85,12 +87,11 @@ void experiment(EdgeExtractor* edge_extractor, const double time_insertion, cons
     safe_write_data_logs(datapoint, "Ready!");
 }
 
-template <class EdgeExtractor>
-void main_experiment(std::vector<double> &array_edges)
+
+void main_experiment(EdgeExtractor* edge_extractor, std::vector<double> array_edges)
 {
     // Create a new edge extractor object
-    EdgeExtractor* edge_extractor;
-
+    std::cout << "Experiment started with " << "edge_extractor->get_name()" << std::endl;
     // Insert all edges from array_edges to edge extractor object
 
     //std::string txt_init = std::format("Insertion Initialized...\nInsert {} edges en {}...\n", array_edges.size(), edge_extractor->get_name());
@@ -105,7 +106,7 @@ void main_experiment(std::vector<double> &array_edges)
 
     std::chrono::duration<double> delta_time_insert = end_insert - start_insert;
     // Create a new edge extractor object
-    EdgeExtractor *edge_extractor2(edge_extractor); // Duplicate edge extractor object
+    EdgeExtractor* edge_extractor2 = edge_extractor->clone(); // Duplicate edge extractor object
 
     // Run the Kruskal algorithm on both edge extractor objects
     experiment(edge_extractor, delta_time_insert.count(), true);
@@ -122,15 +123,20 @@ void main_thread(const arg data, std::mt19937 gen)
     std::vector<node> array_nodes;
     std::uniform_real_distribution<double> distrib(0.0, 1.0);
 
+    std::cout << "Iniciando el experimento N="<< (1<<data.n) << std::endl;
+
+    std::cout << "Reservando memoria..." << std::endl;
     // Reserve space in memory
     array_nodes.reserve(1<<data.n);
 
+    std::cout << "Generando nodos..." << std::endl;
     // Generate random nodes
     for (size_t i = 0; i < array_nodes.capacity(); ++i)
     {
         array_nodes.push_back({distrib(gen), distrib(gen)});
     }
 
+    std::cout << "Calculando distancias..." << std::endl;
     // Calculate the distance between each pair of nodes
     // and save it in a vector
     std::vector<double> array_edges;
@@ -142,15 +148,23 @@ void main_thread(const arg data, std::mt19937 gen)
         }
     }
 
-    // delete array_nodes;
+    std::cout << "Limpieza de memoria..." << std::endl;
+    // Delete the vector
     array_nodes.clear();
 
-    main_experiment<ArraySort>(array_edges);
-    main_experiment<HeapMin>(array_edges);
-    n_thread--;
-    ready = true;
-    cv.notify_one();
-    process_ready += 8. / (LIMIT_SUBITER * 4);
+    
+    std::cout << "Creando la estructura de datos..." << std::endl;
+    ArraySort* array_sort = new ArraySort();
+    HeapMin* heap_min = new HeapMin();
+    
+    // Run the experiment
+    std::cout << "Ejecutando experimento..." << std::endl;
+    main_experiment(array_sort, array_edges);
+    main_experiment(heap_min,array_edges);
+    //n_thread--;
+    //ready = true;
+    //cv.notify_one();
+    //process_ready += 8. / (LIMIT_SUBITER * 4);
     std::cout << "\n Porcentaje de la tarea:" << process_ready << "%;\n";
 }
 
@@ -160,46 +174,46 @@ int main()
     std::cin.tie(nullptr);
     std::ios_base::sync_with_stdio(false);
 
-    for (unsigned int i = LOG2_N_INIT; i < (LOG2_N_END + 1); i++)
-    {
-        for (unsigned int j = LIMIT_SUBITER; j > 0; j--)
-        {
-            queue_gen.push_back({i});
-        }
-    }
-
     df.open(NAME_DF, std::ios::app);
     logs.open(NAME_LOGS, std::ios::app);
 
-    //df << std::setprecision(10);
+    df << std::setprecision(10);
     std::cout << "Iniciando el csv...\n"<< std::endl;
     df << "N, EdgeExtractorName, TimeInsertion, KruskalOptiPath, TimeKruskal;\n";
     std::cout << "Inicializado el csv!\n"<< std::endl;
 
     std::mt19937 gen(SEED); // Generator
 
-    std::vector<std::jthread> list_threads;
-
-    while (!queue_gen.empty())
+    // std::vector<std::jthread> list_threads;
+    std::cout << "Iniciando los experimentos...\n"<< std::endl;
+    for (unsigned int i = LOG2_N_INIT; i < (LOG2_N_END + 1); i++)
     {
-        if (n_thread < MAX_N_THREADS)
+        for (unsigned int j = LIMIT_SUBITER; j > 0; j--)
         {
-            n_thread++;
-            arg data_experiment = queue_gen.back();
-            queue_gen.pop_back();
-            std::jthread work(main_thread, data_experiment, gen);
-            list_threads.push_back(std::move(work));
-        }
-        else
-        {
-            {
-                ready = false;
-                std::unique_lock lk(m_ready);
-                cv.wait(lk, []
-                        { return ready; });
-            }
+            main_thread({i}, gen); //queue_gen.push_back({i});
         }
     }
+
+    //while (!queue_gen.empty())
+    //{
+    //    if (n_thread < MAX_N_THREADS)
+    //    {
+    //        n_thread++;
+    //        arg data_experiment = queue_gen.back();
+    //        queue_gen.pop_back();
+    //        std::jthread work(main_thread, data_experiment, gen);
+    //        list_threads.push_back(std::move(work));
+    //    }
+    //    else
+    //    {
+    //        {
+    //            ready = false;
+    //            std::unique_lock lk(m_ready);
+    //            cv.wait(lk, []
+    //                    { return ready; });
+    //        }
+    //    }
+    //}
 
     df.close();
     logs.close();
