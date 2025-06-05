@@ -1,11 +1,13 @@
 #ifndef EDGE_EXTRACTOR_H
 #define EDGE_EXTRACTOR_H
 
+#include <iostream>
 #include <queue>
 #include <vector>
 #include <string>
 #include <algorithm>
 
+#include "utils.h"
 
 class EdgeExtractor
 {
@@ -25,9 +27,12 @@ private:
     std::priority_queue<double, std::vector<double>, std::greater<double>>* min_priority_queue;
 
 public:
-    HeapMin() {}
+    HeapMin(){min_priority_queue = new std::priority_queue<double, std::vector<double>, std::greater<double>>();}
 
-    HeapMin(const HeapMin& other) : min_priority_queue(other.min_priority_queue) {}
+    HeapMin(const HeapMin &other)
+    {
+        min_priority_queue = new std::priority_queue<double, std::vector<double>, std::greater<double>>(*other.min_priority_queue);
+    }
 
     void insert_edge(double const &edge) override { min_priority_queue->push(edge); }
 
@@ -41,6 +46,8 @@ public:
     const std::string get_name() override { return "HeapMin"; }
 
     unsigned int size() override { return min_priority_queue->size(); }
+
+    bool operator==(const HeapMin &other) const { return are_priority_queues_equal<double, std::vector<double>, std::greater<double>>(*min_priority_queue, *other.min_priority_queue); }
 
     HeapMin *clone() override
     {
@@ -58,9 +65,13 @@ private:
     bool is_sorted = false;
 
 public:
-    ArraySort() {}
+    ArraySort() { array = new std::vector<double>(); }
 
-    ArraySort(ArraySort& other) : array(other.array), is_sorted(false) {}
+    ArraySort(ArraySort &other)
+    {
+        array = new std::vector<double>(*other.array);
+        is_sorted = false; // Reiniciar el flag al clonar
+    }
 
     void insert_edge(double const &edge) override
     {
@@ -83,6 +94,18 @@ public:
     const std::string get_name() override { return "ArraySort"; }
 
     unsigned int size() override { return array->size(); }
+
+    bool operator==(const ArraySort &other) const { 
+        if (is_sorted != other.is_sorted){
+            std::cout << "Error: Owner of the object is_sorted = " << is_sorted << " and other object is_sorted = " << other.is_sorted  << "." << std::endl;
+            return false;
+        }
+       if (array->size() != other.array->size()){
+            std::cout << "Error: Owner of the object size = " << array->size() << " and other object size = " << other.array->size()  << "." << std::endl;
+            return false;
+        }
+        return std::equal(array->begin(), array->end(), other.array->begin()); // Comparar los vectores de manera eficiente
+    }
 
     ArraySort *clone() override
     {
