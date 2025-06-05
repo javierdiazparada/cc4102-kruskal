@@ -70,27 +70,33 @@ void experiment(EdgeExtractor* edge_extractor, const double time_insertion, cons
     safe_write_data_logs(datapoint, "Run Kruskal algorithm...\n");
 
     auto start_exp = std::chrono::high_resolution_clock::now(); // time initial insert
-    //void* kruskal_result = kruskal(edge_extractor, is_opt);
+    void* kruskal_result = kruskal(edge_extractor, is_opt);
     auto end_exp = std::chrono::high_resolution_clock::now(); // time end insert
     std::chrono::duration<double> delta_time_exp = end_exp - start_exp;
 
     datapoint->time_kruskal = delta_time_exp.count();
 
+    // Clean up the result
+    free_kruskal_result(kruskal_result);
+
     safe_write_datapoint(datapoint);
 
     safe_write_data_logs(datapoint, "Ready!");
+    
+    // Clean up datapoint
+    delete datapoint;
 
 }
 
 
-void main_experiment(EdgeExtractor* edge_extractor, std::vector<double> array_edges)
+void main_experiment(EdgeExtractor* edge_extractor, const std::vector<edge>& array_edges)
 {
     // Insert all edges from array_edges to edge extractor object
     std::string txt_init = std::format("Insertion Initialized...\nInsert {} edges en {}...\n", array_edges.size(), edge_extractor->get_name());
     safe_write_data_logs(txt_init);
 
     auto start_insert = std::chrono::high_resolution_clock::now(); // time initial insert
-    for (double edge : array_edges){edge_extractor->insert_edge(edge);}
+    for (const edge& e : array_edges){edge_extractor->insert_edge(e);}
     auto end_insert = std::chrono::high_resolution_clock::now(); // time end insert
     
 
@@ -130,13 +136,16 @@ void main_thread(const arg data, std::mt19937 gen)
     }
 
     // Calculate the distance between each pair of nodes
-    // and save it in a vector
-    std::vector<double> array_edges;
+    // and save it in a vector of edges
+    std::vector<edge> array_edges;
+    array_edges.reserve(array_nodes.size() * (array_nodes.size() - 1) / 2);
+    
     for (size_t i = 0; i < array_nodes.size(); ++i)
     {
         for (size_t j = i + 1; j < array_nodes.size(); ++j)
         {
-            array_edges.push_back(distance(array_nodes[i], array_nodes[j]));
+            double weight = distance(array_nodes[i], array_nodes[j]);
+            array_edges.emplace_back(static_cast<int>(i), static_cast<int>(j), weight);
         }
     }
 

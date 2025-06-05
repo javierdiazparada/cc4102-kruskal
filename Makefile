@@ -20,9 +20,8 @@ check:
 
 run: compilate execute clean check
 
-$(EXECUTABLE): main.cpp
+$(EXECUTABLE): main.cpp src/kruskal.cpp
 	$(CXX) $(CXXFLAGS) $^ -I$(INCLUDE_PATH) $(LDLIBS) -o $@
 
 
 .PHONY: compilate execute clean run check
-

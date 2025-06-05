@@ -6,17 +6,28 @@
 #include <mutex>
 #include <random>
 #include <queue>
+#include <cmath>
 
-// Structs for the experiment
+// Estructuras para el experimento
 struct arg
 {
-    unsigned int n; // log2 size
+    unsigned int n; // tamaño log2
 };
 
 struct node
 {
     double x;
     double y;
+};
+
+struct edge
+{
+    int u, v;           // Índices de nodos
+    double weight;      // Peso de arista (distancia euclidiana al cuadrado)
+    
+    // Constructor
+    edge(int u, int v, double weight) : u(u), v(v), weight(weight) {}
+    edge() : u(0), v(0), weight(0.0) {}
 };
 
 struct datapoint
@@ -28,8 +39,8 @@ struct datapoint
     double time_kruskal;
 };
 
-// Distance function
-double distance(node a, node b)
+// Función de distancia
+inline double distance(node a, node b)
 {
     return std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2);
 }
