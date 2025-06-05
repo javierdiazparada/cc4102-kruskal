@@ -28,6 +28,19 @@ struct edge
     // Constructor
     edge(int u, int v, double weight) : u(u), v(v), weight(weight) {}
     edge() : u(0), v(0), weight(0.0) {}
+    
+    // Comparison operators
+    bool operator==(const edge& other) const {
+        return u == other.u && v == other.v && std::abs(weight - other.weight) < 1e-10;
+    }
+    
+    bool operator!=(const edge& other) const {
+        return !(*this == other);
+    }
+    
+    bool operator<(const edge& other) const {
+        return weight < other.weight;
+    }
 };
 
 struct datapoint

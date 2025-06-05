@@ -40,12 +40,7 @@ void* kruskal(EdgeExtractor *edge_extractor, const bool opti_path)
     ResultadoKruskal* resultado = new ResultadoKruskal(num_nodos);
     
     // Crear estructura Union-Find basada en flag de optimización
-    IUnionFind* uf = nullptr;
-    if (opti_path) {
-        uf = new UnionFindOptimized(num_nodos);
-    } else {
-        uf = new UnionFindBasic(num_nodos);
-    }
+    IUnionFind* uf = new UnionFind(num_nodos, opti_path);
     
     // Procesar aristas en orden de peso creciente
     int aristas_agregadas = 0;

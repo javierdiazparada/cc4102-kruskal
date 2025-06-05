@@ -35,35 +35,47 @@ public:
 };
 
 /**
- * @brief Implementación básica de Union-Find sin path compression
- * Usa únicamente la optimización union by size
+ * @brief Implementación unificada de Union-Find con opción de path compression
+ * Usa union by size y opcionalmente path compression según el parámetro del constructor
  */
-class UnionFindBasic : public IUnionFind {
+class UnionFind : public IUnionFind {
 private:
     std::vector<int> parent;  ///< Arreglo de padres para estructura de árbol
     std::vector<int> size;    ///< Arreglo de tamaños para union by size
+    bool use_path_compression; ///< Flag para activar/desactivar path compression
 
 public:
     /**
      * @brief Constructor - inicializa n conjuntos disjuntos
      * @param n Número de elementos (0 a n-1)
+     * @param path_compression Si usar optimización path compression
      */
-    UnionFindBasic(int n) : parent(n), size(n, 1) {
+    UnionFind(int n, bool path_compression = false) 
+        : parent(n), size(n, 1), use_path_compression(path_compression) {
         for (int i = 0; i < n; ++i) {
             parent[i] = i;  // Cada elemento es su propio padre inicialmente
         }
     }
     
     /**
-     * @brief Encuentra la raíz sin path compression
+     * @brief Encuentra la raíz con o sin path compression según configuración
      * @param x Elemento para encontrar su raíz
      * @return Raíz del conjunto que contiene x
      */
     int find(int x) override {
-        while (parent[x] != x) {
-            x = parent[x];
+        if (use_path_compression) {
+            // Versión con path compression
+            if (parent[x] != x) {
+                parent[x] = find(parent[x]);  // Path compression: aplanar árbol
+            }
+            return parent[x];
+        } else {
+            // Versión básica sin path compression
+            while (parent[x] != x) {
+                x = parent[x];
+            }
+            return x;
         }
-        return x;
     }
     
     /**
@@ -98,68 +110,11 @@ public:
     }
 };
 
-/**
- * @brief Union-Find optimizado con path compression y union by size
- * Proporciona complejidad temporal amortizada casi constante
- */
-class UnionFindOptimized : public IUnionFind {
-private:
-    std::vector<int> parent;  ///< Arreglo de padres para estructura de árbol
-    std::vector<int> size;    ///< Arreglo de tamaños para union by size
-
+// Alias para mantener compatibilidad con código existente
+using UnionFindBasic = UnionFind;
+class UnionFindOptimized : public UnionFind {
 public:
-    /**
-     * @brief Constructor - inicializa n conjuntos disjuntos
-     * @param n Número de elementos (0 a n-1)
-     */
-    UnionFindOptimized(int n) : parent(n), size(n, 1) {
-        for (int i = 0; i < n; ++i) {
-            parent[i] = i;  // Cada elemento es su propio padre inicialmente
-        }
-    }
-    
-    /**
-     * @brief Encuentra la raíz con optimización path compression
-     * @param x Elemento para encontrar su raíz
-     * @return Raíz del conjunto que contiene x
-     */
-    int find(int x) override {
-        if (parent[x] != x) {
-            parent[x] = find(parent[x]);  // Path compression: aplanar árbol
-        }
-        return parent[x];
-    }
-    
-    /**
-     * @brief Une dos conjuntos usando union by size
-     * @param a Primer elemento
-     * @param b Segundo elemento
-     */
-    void unite(int a, int b) override {
-        int rootA = find(a);
-        int rootB = find(b);
-        
-        if (rootA == rootB) return;  // Ya están en el mismo conjunto
-        
-        // Union by size: adjuntar árbol más pequeño al más grande
-        if (size[rootA] < size[rootB]) {
-            parent[rootA] = rootB;
-            size[rootB] += size[rootA];
-        } else {
-            parent[rootB] = rootA;
-            size[rootA] += size[rootB];
-        }
-    }
-    
-    /**
-     * @brief Verifica si dos elementos están conectados
-     * @param a Primer elemento
-     * @param b Segundo elemento
-     * @return true si están conectados, false en caso contrario
-     */
-    bool connected(int a, int b) override {
-        return find(a) == find(b);
-    }
+    UnionFindOptimized(int n) : UnionFind(n, true) {}
 };
 
 #endif // UNION_FIND_HPP

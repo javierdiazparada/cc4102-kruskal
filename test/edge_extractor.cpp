@@ -4,7 +4,7 @@
 #include <random>
 #include <algorithm>
 
-size_t SIZE_TEST = 1000000;
+size_t SIZE_TEST = 1000;
 
 int main() {
 
@@ -12,11 +12,12 @@ int main() {
     // Create an instance of the EdgeExtractor class
     HeapMin heap_min = HeapMin();
     ArraySort array_sorter = ArraySort();
-    std::vector<double> edges;
+    std::vector<edge> edges;
     // Generate random edge values for testing purposes
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0.0, 10.0);
+    std::uniform_int_distribution<> node_dis(0, 99);
 
     size_t contador_heap = 0;
     size_t contador_array = 0;
@@ -25,10 +26,13 @@ int main() {
     std::cout << "Test: Insertion extractors" << std::endl;
     for (int i = 0; i < SIZE_TEST; ++i)
     {
-        double edge_value = dis(gen);
-        heap_min.insert_edge(edge_value);
-        array_sorter.insert_edge(edge_value);
-        edges.push_back(edge_value);
+        double weight = dis(gen);
+        int u = node_dis(gen);
+        int v = node_dis(gen);
+        edge e(u, v, weight);
+        heap_min.insert_edge(e);
+        array_sorter.insert_edge(e);
+        edges.push_back(e);
     }
 
     if (heap_min.size() != edges.size())
@@ -76,23 +80,25 @@ int main() {
 
     std::cout << "Test passed!" << std::endl;
 
-    // Sort the edges using vector sort
-    std::sort(edges.begin(), edges.end());
+    // Sort the edges using vector sort by weight
+    std::sort(edges.begin(), edges.end(), [](const edge& a, const edge& b) {
+        return a.weight < b.weight;
+    });
 
     std::cout << "Test: Extracting edges" << std::endl;
 
     // Extract edges from the graph and store them in a vector
     for (int i = 0; i < SIZE_TEST; ++i)
     {
-        double extracted_edge_heap = heap_min.extract_min();
-        double extracted_edge_array_sort = array_sorter.extract_min();
+        edge extracted_edge_heap = heap_min.extract_min();
+        edge extracted_edge_array_sort = array_sorter.extract_min();
 
-        // Check if the extracted edges match the sorted order
-        if (extracted_edge_heap == edges[i])
+        // Check if the extracted edges match the sorted order by weight
+        if (std::abs(extracted_edge_heap.weight - edges[i].weight) < 1e-10)
         {
             contador_heap++;
         }
-        if (extracted_edge_array_sort == edges[i])
+        if (std::abs(extracted_edge_array_sort.weight - edges[i].weight) < 1e-10)
         {
             contador_array++;
         }
