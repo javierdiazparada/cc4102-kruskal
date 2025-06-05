@@ -70,7 +70,7 @@ void experiment(EdgeExtractor* edge_extractor, const double time_insertion, cons
     safe_write_data_logs(datapoint, "Run Kruskal algorithm...\n");
 
     auto start_exp = std::chrono::high_resolution_clock::now(); // time initial insert
-    //kruskal::Kruskal kruskal(edge_extractor, is_opt);
+    //void* kruskal_result = kruskal(edge_extractor, is_opt);
     auto end_exp = std::chrono::high_resolution_clock::now(); // time end insert
     std::chrono::duration<double> delta_time_exp = end_exp - start_exp;
 
@@ -79,6 +79,7 @@ void experiment(EdgeExtractor* edge_extractor, const double time_insertion, cons
     safe_write_datapoint(datapoint);
 
     safe_write_data_logs(datapoint, "Ready!");
+
 }
 
 
