@@ -15,12 +15,12 @@
 #include "include/edge_extractor.h"
 #include "include/kruskal.h"
 
-const std::string NAME_DF = "df.csv";
-const std::string NAME_LOGS = "logs.txt";
+const std::string NAME_DF = "resultados/df.csv";
+const std::string NAME_LOGS = "resultados/logs.txt";
 constexpr unsigned int LIMIT_SUBITER = 5;
 constexpr unsigned int SEED = 1234;
 constexpr unsigned int WORST_CASE_THREAD = 135; // MB used (PREVENTIVE)
-constexpr unsigned int MAX_N_THREADS = 10;
+constexpr unsigned int MAX_N_THREADS = 5; // Increased to 5 threads for better performance
 constexpr unsigned int LOG2_N_INIT = 5;
 constexpr unsigned int LOG2_N_END = 12;
 
@@ -61,7 +61,11 @@ void experiment(EdgeExtractor* edge_extractor, const double time_insertion, cons
     // Generate the data for the experiment
     struct datapoint* datapoint = new struct datapoint;
 
-    datapoint->n = edge_extractor->size();
+    // Calculate number of nodes from number of edges (for complete graph: edges = n*(n-1)/2)
+    size_t num_aristas = edge_extractor->size();
+    int num_nodos = static_cast<int>((1 + std::sqrt(1 + 8.0 * num_aristas)) / 2.0);
+    
+    datapoint->n = num_nodos;  // Store number of nodes, not edges
     datapoint->edge_extractor_name = edge_extractor->get_name();
     datapoint->opti_path = is_opt;
     datapoint->time_insertion = time_insertion;
@@ -117,10 +121,13 @@ void main_experiment(EdgeExtractor* edge_extractor, const std::vector<edge>& arr
 }
 
 
-void main_thread(const arg data, std::mt19937 gen)
+void main_thread(const arg data, unsigned int thread_seed)
 {
     std::vector<node> array_nodes;
     std::uniform_real_distribution<double> distrib(0.0, 1.0);
+    
+    // Create thread-specific random generator
+    std::mt19937 gen(thread_seed);
 
 
     std::string txt =  std::format("Iniciando el experimento N={}", (1<<data.n));
@@ -171,8 +178,8 @@ int main()
     std::cin.tie(nullptr);
     std::ios_base::sync_with_stdio(false);
 
-    df.open(NAME_DF, std::ios::app);
-    logs.open(NAME_LOGS, std::ios::app);
+    df.open(NAME_DF, std::ios::out);
+    logs.open(NAME_LOGS, std::ios::out);
 
     df << std::setprecision(10);
     std::cout << "Iniciando el csv..."<< std::endl;
@@ -191,6 +198,7 @@ int main()
         }
     }
 
+    unsigned int thread_counter = 0;
     while (!queue_gen.empty())
     {
         if (n_thread < MAX_N_THREADS)
@@ -198,7 +206,12 @@ int main()
             n_thread++;
             arg data_experiment = queue_gen.back();
             queue_gen.pop_back();
-            std::jthread work(main_thread, data_experiment, gen);
+            
+            // Generate unique seed for each thread
+            unsigned int thread_seed = SEED + thread_counter * 1000 + data_experiment.n;
+            thread_counter++;
+            
+            std::jthread work(main_thread, data_experiment, thread_seed);
             list_threads.push_back(std::move(work));
         }
         else
@@ -212,6 +225,15 @@ int main()
         }
     }
 
+    // Wait for all threads to complete before closing files
+    std::cout << "Esperando que terminen todos los threads..." << std::endl;
+    for (auto& thread : list_threads) {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+    
+    std::cout << "Todos los threads completados. Cerrando archivos..." << std::endl;
     df.close();
     logs.close();
 

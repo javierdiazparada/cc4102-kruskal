@@ -8,48 +8,82 @@
 #include <queue>
 #include <cmath>
 
-// Estructuras para el experimento
+/**
+ * @brief Estructura de argumentos para experimentos
+ */
 struct arg
 {
-    unsigned int n; // tamaño log2
+    unsigned int n; ///< Tamaño como potencia de 2 (log2)
 };
 
+/**
+ * @brief Representa un nodo en el plano bidimensional
+ */
 struct node
 {
-    double x;
-    double y;
+    double x; ///< Coordenada x en el rango [0,1]
+    double y; ///< Coordenada y en el rango [0,1]
 };
 
+/**
+ * @brief Representa una arista entre dos nodos
+ */
 struct edge
 {
-    int u, v;           // Índices de nodos
-    double weight;      // Peso de arista (distancia euclidiana al cuadrado)
+    int u, v;           ///< Índices de nodos conectados
+    double weight;      ///< Peso de arista (distancia euclidiana al cuadrado)
     
-    // Constructor
+    /**
+     * @brief Constructor con parámetros
+     * @param u Índice del primer nodo
+     * @param v Índice del segundo nodo
+     * @param weight Peso de la arista
+     */
     edge(int u, int v, double weight) : u(u), v(v), weight(weight) {}
+    
+    /**
+     * @brief Constructor por defecto
+     */
     edge() : u(0), v(0), weight(0.0) {}
     
-    // Comparison operators
+    /**
+     * @brief Operador de igualdad
+     * @param other Otra arista para comparar
+     * @return true si las aristas son iguales
+     */
     bool operator==(const edge& other) const {
         return u == other.u && v == other.v && std::abs(weight - other.weight) < 1e-10;
     }
     
+    /**
+     * @brief Operador de desigualdad
+     * @param other Otra arista para comparar
+     * @return true si las aristas son diferentes
+     */
     bool operator!=(const edge& other) const {
         return !(*this == other);
     }
     
+    /**
+     * @brief Operador menor que (por peso)
+     * @param other Otra arista para comparar
+     * @return true si esta arista tiene menor peso
+     */
     bool operator<(const edge& other) const {
         return weight < other.weight;
     }
 };
 
+/**
+ * @brief Estructura para almacenar datos de un experimento
+ */
 struct datapoint
 {
-    unsigned long long n;
-    std::string edge_extractor_name;
-    double time_insertion;
-    bool opti_path;
-    double time_kruskal;
+    unsigned long long n;           ///< Número de nodos en el experimento
+    std::string edge_extractor_name; ///< Nombre del extractor usado ("ArraySort" o "HeapMin")
+    double time_insertion;          ///< Tiempo de inserción de aristas (segundos)
+    bool opti_path;                 ///< Si se usó optimización path compression
+    double time_kruskal;            ///< Tiempo de ejecución de Kruskal (segundos)
 };
 
 // Función de distancia

@@ -3,16 +3,16 @@
 #include <random>
 #include <chrono>
 
-#include "include/utils.h"
-#include "include/edge_extractor.h"
-#include "include/kruskal.h"
+#include "../include/utils.h"
+#include "../include/edge_extractor.h"
+#include "../include/kruskal.h"
 
 int main()
 {
     std::cout << "=== PRUEBA RÁPIDA DEL SISTEMA KRUSKAL ===" << std::endl;
     
     // Generar un grafo pequeño de prueba (N=8 nodos)
-    const int N = 500;
+    const int N = 4096;
     std::vector<node> nodes;
     std::mt19937 gen(1234);
     std::uniform_real_distribution<double> distrib(0.0, 1.0);
