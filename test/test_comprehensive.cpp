@@ -271,14 +271,14 @@ int main() {
     
     // Agrupar por tamaño y secuencia para verificar que las 4 variantes den el mismo resultado
     std::map<std::pair<int, int>, std::vector<ExperimentResult>> by_size_and_sequence;
-    int sequence_counter = 0;
+    size_t sequence_counter = 0;
     
     for (int size : sizes) {
         for (int seq = 0; seq < num_sequences; ++seq) {
             std::pair<int, int> key = {size, seq};
             // Tomar los 4 resultados correspondientes a esta secuencia
-            for (int variant = 0; variant < 4; ++variant) {
-                int index = sequence_counter * 4 + variant;
+            for (size_t variant = 0; variant < 4; ++variant){
+                size_t index = sequence_counter * 4 + variant;
                 if (index < all_results.size()) {
                     by_size_and_sequence[key].push_back(all_results[index]);
                 }
