@@ -19,7 +19,6 @@ const std::string NAME_DF = "resultados/df.csv";
 const std::string NAME_LOGS = "resultados/logs.txt";
 constexpr unsigned int LIMIT_SUBITER = 5;
 constexpr unsigned int SEED = 1234;
-constexpr unsigned int WORST_CASE_THREAD = 135; // MB used (PREVENTIVE)
 constexpr unsigned int MAX_N_THREADS = 5; // Increased to 5 threads for better performance
 constexpr unsigned int LOG2_N_INIT = 5;
 constexpr unsigned int LOG2_N_END = 12;
@@ -52,7 +51,7 @@ void safe_write_data_logs(const datapoint *data, const std::string txt)
 void safe_write_datapoint(const datapoint *data)
 {
     m_df.lock();
-    df <<  data->n << ", " << data->edge_extractor_name << ", " << data->time_insertion << ", " << data->opti_path << ", " << data->time_kruskal << ";\n";
+    df <<  data->n << "," << data->edge_extractor_name << "," << data->time_insertion << "," << data->opti_path << "," << data->time_kruskal << "\n";
     m_df.unlock();
 }
 
@@ -183,7 +182,7 @@ int main()
 
     df << std::setprecision(10);
     std::cout << "Iniciando el csv..."<< std::endl;
-    df << "N, EdgeExtractorName, TimeInsertion, KruskalOptiPath, TimeKruskal;\n";
+    df << "N,EdgeExtractorName,TimeInsertion,KruskalOptiPath,TimeKruskal\n";
     std::cout << "Inicializado el csv!"<< std::endl;
 
     std::mt19937 gen(SEED); // Generator
