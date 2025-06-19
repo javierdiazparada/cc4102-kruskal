@@ -44,6 +44,14 @@ private:
     std::vector<int> size;    ///< Arreglo de tamaños para union by size
     bool use_path_compression; ///< Flag para activar/desactivar path compression
 
+    int find_optimized(int x) {
+        // Versión con path compression
+        if (parent[x] != x) {
+            parent[x] = find_optimized(parent[x]); // Path compression: aplanar árbol
+        }
+        return parent[x];
+    }
+
 public:
     /**
      * @brief Constructor - inicializa n conjuntos disjuntos
@@ -64,11 +72,7 @@ public:
      */
     int find(int x) override {
         if (use_path_compression) {
-            // Versión con path compression
-            if (parent[x] != x) {
-                parent[x] = find(parent[x]);  // Path compression: aplanar árbol
-            }
-            return parent[x];
+            return find_optimized(x);
         } else {
             // Versión básica sin path compression
             while (parent[x] != x) {
@@ -77,7 +81,7 @@ public:
             return x;
         }
     }
-    
+
     /**
      * @brief Une dos conjuntos usando union by size
      * @param a Primer elemento
@@ -86,14 +90,14 @@ public:
     void unite(int a, int b) override {
         int rootA = find(a);
         int rootB = find(b);
-        
-        if (rootA == rootB) return;  // Ya están en el mismo conjunto
-        
+        if (rootA == rootB)
+            return; // Ya están en el mismo conjunto
         // Union by size: adjuntar árbol más pequeño al más grande
         if (size[rootA] < size[rootB]) {
             parent[rootA] = rootB;
             size[rootB] += size[rootA];
-        } else {
+        }
+        else {
             parent[rootB] = rootA;
             size[rootA] += size[rootB];
         }

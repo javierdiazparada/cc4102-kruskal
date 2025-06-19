@@ -19,9 +19,9 @@ const std::string NAME_DF = "resultados/df.csv";
 const std::string NAME_LOGS = "resultados/logs.txt";
 constexpr unsigned int LIMIT_SUBITER = 5;
 constexpr unsigned int SEED = 1234;
-constexpr unsigned int MAX_N_THREADS = 5; // Increased to 5 threads for better performance
+constexpr unsigned int MAX_N_THREADS = 1; // Increased to 5 threads for better performance
 constexpr unsigned int LOG2_N_INIT = 5;
-constexpr unsigned int LOG2_N_END = 12;
+constexpr unsigned int LOG2_N_END = 14;
 
 std::atomic<unsigned short> n_thread = 0;
 std::atomic<double> process_ready = 0.;
